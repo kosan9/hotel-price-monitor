@@ -2,7 +2,6 @@ name: Travelodge Price Monitor
 
 on:
   schedule:
-    # Run 4 times/day (UTC): 00:15, 06:15, 12:15, 18:15
     - cron: "15 0,6,12,18 * * *"
   workflow_dispatch: {}
 
@@ -39,21 +38,14 @@ jobs:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
-          python monitor_travelodge.py \
-            --url "https://www.travelodge.co.uk/hotels/197/Aberdeen-Bucksburn-hotel?checkIn=13/08/2026&checkOut=17/08/2026&rooms[0][adults]=3&rooms[0][children]=0&searchLocation=Aberdeen" \
-            --expected 214 \
-            --drop-pct 5 \
-            --target 200 \
-            --state travelodge_state.json \
-            --history travelodge_history.csv
+          python monitor_travelodge.py --config hotels.json
 
       - name: Commit history/state (if changed)
         run: |
-          git status --porcelain
           if [ -n "$(git status --porcelain)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add travelodge_history.csv travelodge_state.json
+            git add -A
             git commit -m "Update Travelodge price history"
             git push
           else
