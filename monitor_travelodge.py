@@ -10,8 +10,138 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
 
+GBP_RE = re.compile(r"£\s*([0-9]{1,5}(?:\.[0-9]{2})?)", re.I)
 
-GBP_RE = re.compile(r"£\s*([0-9]{1,5}(?:\.[0-9]{2})?)")
+
+def extract_price_from_rate_button(btn) -> float | None:
+    # 1) Try the split spans if present
+    try:
+        int_loc = btn.locator(".rate-int").first
+        dec_loc = btn.locator(".rate-dec").first
+        if int_loc.count() > 0 and dec_loc.count() > 0:
+            int_part = int_loc.inner_text(timeout=2000).strip()
+            dec_part = dec_loc.inner_text(timeout=2000).strip()
+            if int_part.isdigit() and dec_part.isdigit():
+                return float(f"{int_part}.{dec_part}")
+    except Exception:
+        pass
+
+    # 2) Try reading the button text and extracting the FIRST £amount
+    try:
+        txt = btn.inner_text(timeout=2000)
+        amts = extract_gbp_amounts(txt)
+        if amts:
+            # If multiple amounts appear, pick the largest (usually total)
+            return max(amts)
+    except Exception:
+        pass
+
+    # 3) Last resort: read all textContent (sometimes inner_text is empty)
+    try:
+        txt = btn.evaluate("el => el.textContent || ''")
+        amts = extract_gbp_amounts(txt)
+        if amts:
+            return max(amts)
+    except Exception:
+        pass
+
+    return None
+
+
+def find_saver_rate_price(page) -> float | None:
+    btn = page.locator('button[data-rate-plan-code="SAVER"]').first
+    try:
+        if btn.count() == 0:
+            return None
+        # wait until it has some text
+        btn.wait_for(state="visible", timeout=15000)
+        page.wait_for_timeout(500)  # small settle
+        return extract_price_from_rate_button(btn)
+    except Exception:
+        return None
+
+# def find_saver_rate_price(page) -> float | None:
+#     main = page.locator("main")
+#
+#     # Wait (up to 15s) for any Saver rate buttons to appear
+#     try:
+#         main.locator('button[data-rate-plan-code="SAVER"]').first.wait_for(state="attached", timeout=15000)
+#     except Exception:
+#         pass
+#
+#     # Prefer a Saver button that is "selected", but don't rely on it
+#     candidates = [
+#         'button[data-rate-plan-code="SAVER"].selected',
+#         'button[data-rate-plan-code="SAVER"][aria-pressed="true"]',
+#         'button[data-rate-plan-code="SAVER"]',
+#         'button[data-room-rate-type-name="Saver"]',
+#         'button[data-ratename*="Saver" i]',
+#     ]
+#
+#     for sel in candidates:
+#         btn = main.locator(sel).first
+#         try:
+#             if btn.count() > 0:
+#
+#                 try:
+#                     print("DEBUG: saver_button_outer_html =", btn.evaluate("el => el.outerHTML")[:400])
+#                 except Exception as e:
+#                     print("DEBUG: saver_button_outer_html failed:", e)
+#
+#                 price = extract_price_from_rate_button(btn)
+#                 if price is not None:
+#                     return price
+#         except Exception:
+#             continue
+#
+#     return None
+
+
+
+def pick_total_from_block(amounts: list[float], floor: float = 80.0) -> float | None:
+    # Ignore tiny UI prices; pick the biggest remaining (often total stay)
+    cand = [a for a in amounts if a >= floor]
+    return max(cand) if cand else None
+
+def find_rate_price_by_keyword(page, keyword: str, floor: float = 80.0, max_hits: int = 8) -> float | None:
+    """
+    Find price inside the same DOM block that contains `keyword` (case-insensitive).
+    We search inside <main>, then for each hit we walk up parents and extract £ amounts.
+    """
+    main = page.locator("main")
+
+    # Regex text match inside main (more reliable than `text=/.../i` string selector)
+    hits = main.get_by_text(re.compile(keyword, re.I))
+
+    try:
+        count = hits.count()
+    except Exception as e:
+        print(f"WARN: could not count keyword hits for '{keyword}': {e}")
+        return None
+
+    n = min(count, max_hits)
+    best = None
+
+    for i in range(n):
+        node = hits.nth(i)
+        cur = node
+        for _ in range(6):
+            try:
+                txt = cur.inner_text(timeout=2000)
+            except Exception:
+                txt = ""
+
+            amts = extract_gbp_amounts(txt)
+            total = pick_total_from_block(amts, floor=floor)
+
+            if total is not None:
+                best = total if best is None else min(best, total)
+                break
+
+            # go up one parent
+            cur = cur.locator("xpath=..")
+
+    return best
 
 
 def telegram_send(msg: str) -> None:
@@ -28,15 +158,12 @@ def telegram_send(msg: str) -> None:
 
 def extract_gbp_amounts(text: str) -> list[float]:
     vals = []
-    for m in GBP_RE.finditer(text):
+    for m in GBP_RE.finditer(text or ""):
         try:
             vals.append(float(m.group(1)))
         except ValueError:
             pass
-    # de-dup with rounding (page may repeat prices)
-    vals = sorted({round(v, 2) for v in vals})
-    return vals
-
+    return sorted({round(v, 2) for v in vals})
 
 def choose_best_price(amounts: list[float], last_price: float | None, expected: float | None) -> float | None:
     if not amounts:
@@ -54,31 +181,75 @@ def choose_best_price(amounts: list[float], last_price: float | None, expected: 
 
 
 def fetch_price(url: str, timeout_ms: int = 45000) -> tuple[float | None, list[float], str]:
+    """
+    Returns: (chosen_price, all_amounts_found, sample_text)
+    Priority:
+      1) Try to extract price from the block containing "Saver" (reduces other-hotel noise)
+      2) Fallback: scan whole page for all £ amounts
+    """
+    chosen = None
+    amounts = []
+    sample_text = ""
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         try:
             page.goto(url, wait_until="networkidle", timeout=timeout_ms)
-            # small extra wait in case late JS updates price
-            page.wait_for_timeout(1500)
+            page.wait_for_timeout(5000)
+
+            # Best-effort cookie accept (Travelodge may show a banner)
+            for sel in [
+                'button:has-text("Accept all")',
+                'button:has-text("Accept")',
+                'text=Accept all cookies',
+            ]:
+                try:
+                    loc = page.locator(sel).first
+                    if loc.count() > 0:
+                        loc.click(timeout=1500)
+                        page.wait_for_timeout(1000)
+                        break
+                except Exception:
+                    pass
+
+            try:
+                n = page.locator('button[data-rate-plan-code="SAVER"]').count()
+                print(f"DEBUG: saver_buttons_count = {n}")
+            except Exception as e:
+                print(f"DEBUG: saver_buttons_count failed: {e}")
+
+            chosen = find_saver_rate_price(page)
+            print(f"DEBUG: saver_extracted_price = {chosen}")
+
+            # 2) Always collect full-page amounts for debugging/history
             content = page.content()
             text = page.inner_text("body")
+            sample_text = text[:5000]
+
+            amounts = extract_gbp_amounts(text) + extract_gbp_amounts(content)
+            amounts = sorted({round(v, 2) for v in amounts})
+
         except PlaywrightTimeoutError:
-            # still try to grab what we can
-            content = page.content()
+            # best-effort capture
+            try:
+                content = page.content()
+            except Exception:
+                content = ""
             try:
                 text = page.inner_text("body")
             except Exception:
                 text = ""
+            sample_text = text[:5000]
+            amounts = extract_gbp_amounts(text) + extract_gbp_amounts(content)
+            amounts = sorted({round(v, 2) for v in amounts})
+
         finally:
             browser.close()
 
-    # Search both rendered text and HTML for currency values
-    amounts = extract_gbp_amounts(text) + extract_gbp_amounts(content)
-    # de-dup
-    amounts = sorted({round(v, 2) for v in amounts})
+    return chosen, amounts, sample_text
 
-    return None, amounts, text[:5000]  # price chosen later; also return some text sample for debug
+
 
 
 def load_state(state_path: Path) -> dict:
@@ -119,9 +290,13 @@ def main():
     state = load_state(state_path)
     last_price = state.get("last_price_gbp")
 
-    _, amounts, _sample = fetch_price(args.url)
+    chosen, amounts, _sample = fetch_price(args.url)
 
-    chosen = choose_best_price(amounts, last_price=last_price, expected=args.expected)
+    # If Saver extraction failed, fallback to old heuristic
+    if chosen is None:
+        chosen = choose_best_price(amounts, last_price=last_price, expected=args.expected)
+
+        print(f"DEBUG: final_chosen_price = {chosen}")
 
     ts = datetime.now(timezone.utc).isoformat(timespec="seconds")
     append_history(csv_path, ts, chosen, amounts, args.url)
