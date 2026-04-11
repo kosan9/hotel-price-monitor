@@ -14,6 +14,13 @@
     "drop_pct": 5
   },
   {
+    "name": "Travelodge Perth Broxden Junction 11-12 Aug 2026",
+    "url": "https://www.travelodge.co.uk/hotels/250/Perth-Broxden-Junction-hotel?checkIn=11/08/2026&checkOut=13/08/2026&rooms[0][adults]=3&rooms[0][children]=0&sb=1&searchLocation=dundee",
+    "expected": 208,
+    "target": 200,
+    "drop_pct": 5
+  },
+  {
     "name": "Travelodge Newcastle Quayside 20 Aug 2026",
     "url": "https://www.travelodge.co.uk/hotels/633/Newcastle-Quayside-hotel?checkIn=20/08/2026&checkOut=21/08/2026&rooms[0][adults]=3&rooms[0][children]=0&searchLocation=newcastle",
     "expected": 37,
