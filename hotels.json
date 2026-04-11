@@ -12,5 +12,12 @@
     "expected": 215,
     "target": 200,
     "drop_pct": 5
+  },
+  {
+    "name": "Travelodge Newcastle Quayside 20 Aug 2026",
+    "url": "https://www.travelodge.co.uk/hotels/633/Newcastle-Quayside-hotel?checkIn=20/08/2026&checkOut=21/08/2026&rooms[0][adults]=3&rooms[0][children]=0&searchLocation=newcastle",
+    "expected": 37,
+    "target": 35,
+    "drop_pct": 5
   }
 ]
