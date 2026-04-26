@@ -26,5 +26,12 @@
     "expected": 37,
     "target": 35,
     "drop_pct": 5
+  },
+  {
+    "name": "Travelodge London Chessington Tolworth",
+    "url": "https://www.travelodge.co.uk/hotels/282/London-Chessington-Tolworth-hotel?checkIn=26/07/2026&checkOut=29/07/2026&rooms[0][adults]=3&rooms[0][children]=0&searchLocation=london",
+    "expected": 150,
+    "target": 130,
+    "drop_pct": 10
   }
 ]
