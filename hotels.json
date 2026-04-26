@@ -1,12 +1,5 @@
 [
-  {
-    "name": "Aberdeen Bucksburn 13-17 Aug 2026",
-    "url": "https://www.travelodge.co.uk/hotels/197/Aberdeen-Bucksburn-hotel?checkIn=13/08/2026&checkOut=17/08/2026&rooms[0][adults]=3&rooms[0][children]=0&searchLocation=Aberdeen",
-    "expected": 214,
-    "target": 200,
-    "drop_pct": 5
-  },
-  {
+ {
     "name": "Travelodge Dundee Central 11-12 Aug 2026",
     "url": "https://www.travelodge.co.uk/hotels/301/Dundee-Central-hotel?checkIn=11/08/2026&checkOut=13/08/2026&rooms[0][adults]=3&rooms[0][children]=0&searchLocation=Perth",
     "expected": 215,
@@ -28,10 +21,10 @@
     "drop_pct": 5
   },
   {
-    "name": "Travelodge London Chessington Tolworth",
-    "url": "https://www.travelodge.co.uk/hotels/282/London-Chessington-Tolworth-hotel?checkIn=26/07/2026&checkOut=29/07/2026&rooms[0][adults]=3&rooms[0][children]=0&searchLocation=london",
-    "expected": 150,
-    "target": 130,
-    "drop_pct": 10
+    "name": "Travelodge Manchester Ancoats Jul 26-30",
+    "url": "https://www.travelodge.co.uk/hotels/280/Manchester-Ancoats-hotel?checkIn=26/07/2026&checkOut=29/07/2026&rooms[0][adults]=3&rooms[0][children]=0",
+    "expected": 90,
+    "target": 70,
+    "drop_pct": 5
   }
 ]
