@@ -7,6 +7,20 @@
     "drop_pct": 5
   },
   {
+    "name": "Travelodge Llandudno Oct 18-23",
+    "url": "https://www.travelodge.co.uk/hotels/587/Llandudno-hotel?checkIn=18%2F10%2F2026&checkOut=23%2F10%2F2026&rooms%5B0%5D%5Badults%5D=3&rooms%5B0%5D%5Bchildren%5D=0&sb=0&searchLocation=North+Wales&occr=off&TL06=1",
+    "expected": 218,
+    "target": 200,
+    "drop_pct": 5
+  },
+  {
+    "name": "Travelodge Bournemout Oct 18-23",
+    "url": " https://www.travelodge.co.uk/hotels/267/Bournemouth-hotel?checkIn=18%2F10%2F26&checkOut=23%2F10%2F26&rooms%5B0%5D%5Badults%5D=3&rooms%5B0%5D%5Bchildren%5D=0",
+    "expected": 184,
+    "target": 170,
+    "drop_pct": 5
+  },
+  {
     "name": "Travelodge London Chessington Tolworth Dec 26-31",
     "url": "https://www.travelodge.co.uk/hotels/282/London-Chessington-Tolworth-hotel?checkIn=26/12/2026&checkOut=31/12/2026&rooms[0][adults]=3&rooms[0][children]=0&searchLocation=South%20London",
     "expected": 211,
@@ -14,3 +28,4 @@
     "drop_pct": 5
   }
 ]
+
