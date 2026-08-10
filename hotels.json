@@ -1,12 +1,5 @@
 [
   {
-    "name": "Travelodge Newcastle Quayside 20 Aug 2026",
-    "url": "https://www.travelodge.co.uk/hotels/633/Newcastle-Quayside-hotel?checkIn=20/08/2026&checkOut=21/08/2026&rooms[0][adults]=3&rooms[0][children]=0&searchLocation=newcastle",
-    "expected": 37,
-    "target": 35,
-    "drop_pct": 5
-  },
-  {
     "name": "Travelodge Llandudno Oct 18-23",
     "url": "https://www.travelodge.co.uk/hotels/587/Llandudno-hotel?checkIn=18%2F10%2F2026&checkOut=23%2F10%2F2026&rooms%5B0%5D%5Badults%5D=3&rooms%5B0%5D%5Bchildren%5D=0&sb=0&searchLocation=North+Wales&occr=off&TL06=1",
     "expected": 218,
