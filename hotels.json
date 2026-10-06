@@ -1,12 +1,5 @@
 [
   {
-    "name": "travelodge bournemouth Oct 18-23",
-    "url": "https://www.travelodge.co.uk/hotels/267/Bournemouth-hotel?checkIn=18/10/2026&checkOut=23/10/2026&rooms[0][adults]=3&rooms[0][children]=0",
-    "expected": 184,
-    "target": 170,
-    "drop_pct": 5
-  },
-  {
     "name": "Travelodge London Chessington Tolworth Dec 26-31",
     "url": "https://www.travelodge.co.uk/hotels/282/London-Chessington-Tolworth-hotel?checkIn=26/12/2026&checkOut=31/12/2026&rooms[0][adults]=3&rooms[0][children]=0&searchLocation=South%20London",
     "expected": 211,
