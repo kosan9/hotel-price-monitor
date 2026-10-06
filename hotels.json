@@ -5,6 +5,13 @@
     "expected": 211,
     "target": 200,
     "drop_pct": 5
+  },
+  {
+    "name": "Travelodge Liverpool John Lennon Airport Feb 14-18",
+    "url": "https://www.travelodge.co.uk/hotels/630/Liverpool-John-Lennon-Airport-hotel?checkIn=14%2F02%2F2027&checkOut=18%2F02%2F2027&rooms%5B0%5D%5Badults%5D=3&rooms%5B0%5D%5Bchildren%5D=0&searchLocation=Liverpool+Airport&occr=off&TL06=1",
+    "expected": 124,
+    "target": 110,
+    "drop_pct": 5
   }
 ]
 
